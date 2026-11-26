@@ -7,7 +7,8 @@ DARTSLIVE-200S を公式アプリで遊びながら、刺さった場所を Andr
 - PC連携（v0.2.0）：PC の PLAY →「PHONE」で出た8文字のコードを入力 → 1投ずつ Firestore 経由で PC に届く
   - 送るのは区画（例 T20）・時刻・連番だけ。それ以外のキー入力は送らない
   - 通信できないときはスマホに貯めて、つながったら自動で再送（二重登録なし）
-- APK は GitHub Actions で自動ビルドされ、Releases の「test-latest」に置かれます
+- APK は GitHub Actions で自動ビルド：main → Releases「test-latest」（安定版・戻す用）、それ以外のブランチ → 「test-pr」（実機テスト中の版）
+- 入れ替えるときは、署名がビルドごとに変わるので **アンインストールしてから** 入れる
 - 送信部分のテスト：`jvm-test/README.md`（Firestore エミュレーター相手）
 
 ## 確認したいこと
