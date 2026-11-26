@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** 受け取ったキーの記録（このスマホのメモリ内だけ。テスト用）。 */
+/** 受け取ったキーの記録（画面表示用。このスマホのメモリ内だけ）。 */
 object KeyLog {
     data class Entry(val text: String, val segment: String?)
 
@@ -23,7 +23,7 @@ object KeyLog {
         private set
 
     /** サービスから呼ばれる。重い処理はしない（公式アプリへの配信を遅らせないため）。 */
-    fun add(e: KeyEvent, foreground: String) {
+    fun add(e: KeyEvent, foreground: String): String? {
         val shift = e.isShiftPressed
         val modifier = KeyMap.isModifier(e.keyCode)
         val seg = if (modifier) null else KeyMap.segmentOf(e.keyCode, shift)
@@ -42,6 +42,7 @@ object KeyLog {
             while (entries.size > MAX) entries.removeLast()
         }
         notifyChanged()
+        return seg
     }
 
     fun snapshot(): List<Entry> = synchronized(this) { entries.toList() }
