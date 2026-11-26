@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">投擲ウォッチャー(テスト)</string>
+    <string name="service_label">投擲ウォッチャー</string>
+    <string name="service_desc">DARTSLIVE-200S から届くキー入力を見るだけのテスト用サービスです。入力は書き換えず、そのまま公式アプリに渡します。記録はこのスマホの中だけに残ります。</string>
+</resources>
