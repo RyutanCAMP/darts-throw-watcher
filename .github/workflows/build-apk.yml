@@ -34,10 +34,21 @@ jobs:
           path: throw-watcher-test.apk
 
       # スマホからログインなしでダウンロードできるように、リリースにも置く
+      # main = 安定版（test-latest。旧版に戻すときもここから）／それ以外のブランチ = 実機テスト中の版（test-pr）
       - uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
         with:
           tag_name: test-latest
           name: 投擲ウォッチャー テスト版（最新）
+          prerelease: true
+          make_latest: false
+          files: throw-watcher-test.apk
+
+      - uses: softprops/action-gh-release@v2
+        if: github.ref != 'refs/heads/main'
+        with:
+          tag_name: test-pr
+          name: 投擲ウォッチャー 実機テスト中（${{ github.ref_name }}）
           prerelease: true
           make_latest: false
           files: throw-watcher-test.apk

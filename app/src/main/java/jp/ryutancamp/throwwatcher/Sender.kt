@@ -159,7 +159,7 @@ object Sender {
                 }
                 FirestoreRest.Outcome.REJECTED -> {
                     // 区画は決まった形しか送らないので、断られる＝ルール未更新など。捨てずに待って再送する
-                    lastError = "送信を断られました（Firestoreのルール未更新の可能性）"
+                    lastError = "送信を断られました（連携コードの期限30日切れ、またはFirestoreのルール未更新）→ PCで新しいコードを発行して入力し直し"
                     retryLater(60_000)
                     return
                 }
