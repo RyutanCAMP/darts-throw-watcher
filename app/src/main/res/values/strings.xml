@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">投擲ウォッチャー(テスト)</string>
     <string name="service_label">投擲ウォッチャー</string>
     <string name="service_desc">DARTSLIVE-200S から届くキー入力を見るだけのサービスです。入力は書き換えず、そのまま公式アプリに渡します。PCと連携したときだけ、刺さった区画（例：T20）と時刻をPCへ送ります。それ以外のキー入力は送りません。</string>
 </resources>

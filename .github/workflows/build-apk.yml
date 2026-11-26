@@ -2,6 +2,7 @@ name: Build test APK
 
 on:
   push:
+    branches: ['**']   # タグ（正式版）は release.yml
   workflow_dispatch:
 
 permissions:
@@ -22,8 +23,9 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Build debug APK
-        run: gradle --no-daemon :app:assembleDebug
+      # 正式版（release）も署名なしで組み立てて、設定が壊れていないか毎回確かめる
+      - name: Build debug APK (+ release build check)
+        run: gradle --no-daemon :app:assembleDebug :app:assembleRelease
 
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk throw-watcher-test.apk
