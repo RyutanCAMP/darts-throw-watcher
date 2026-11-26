@@ -1,10 +1,13 @@
 name: Release (正式版)
 
-# v1.0.0 のようなタグを push すると、署名付きの正式版 APK を作って GitHub Releases の「Latest」に置く。
+# main の app/build.gradle.kts の versionName が新しくなったら（まだ v<versionName> のリリースが無ければ）、
+# 署名付きの正式版 APK を作り、タグ v<versionName> と GitHub Releases の「Latest」を自動で作る。
+# （手でタグ v* を push しても同じように動く）
 # 必要なシークレット（Settings → Secrets and variables → Actions）:
 #   RELEASE_KEYSTORE_BASE64 / RELEASE_KEYSTORE_PASSWORD / RELEASE_KEY_ALIAS / RELEASE_KEY_PASSWORD
 on:
   push:
+    branches: [main]
     tags: ['v*']
 
 permissions:
@@ -16,16 +19,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Decide version
+        id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | head -1)
+          [ -n "$VER" ] || { echo "::error::versionName が読めません"; exit 1; }
+          TAG="v$VER"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "$TAG" ]; then echo "::error::タグ ${GITHUB_REF_NAME} と versionName $VER が違います"; exit 1; fi
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "$TAG は公開済み → 何もしない"; echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$TAG を作る"; echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-java@v4
+        if: steps.ver.outputs.skip != 'true'
         with:
           distribution: temurin
           java-version: "17"
 
       - uses: gradle/actions/setup-gradle@v4
+        if: steps.ver.outputs.skip != 'true'
         with:
           gradle-version: "8.9"
 
       - name: Restore signing key
+        if: steps.ver.outputs.skip != 'true'
         env:
           KS_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
@@ -34,6 +56,7 @@ jobs:
           echo "RELEASE_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
       - name: Build signed release APK
+        if: steps.ver.outputs.skip != 'true'
         env:
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -41,6 +64,7 @@ jobs:
         run: gradle --no-daemon :app:assembleRelease
 
       - name: Check signature
+        if: steps.ver.outputs.skip != 'true'
         run: |
           APK=app/build/outputs/apk/release/app-release.apk
           test -f "$APK" || { echo "::error::署名付きAPKができていません"; ls -R app/build/outputs/apk; exit 1; }
@@ -50,12 +74,14 @@ jobs:
           rm -f "$RUNNER_TEMP/release.jks"
 
       - uses: softprops/action-gh-release@v2
+        if: steps.ver.outputs.skip != 'true'
         with:
-          tag_name: ${{ github.ref_name }}
-          name: 投擲ウォッチャー ${{ github.ref_name }}
+          tag_name: ${{ steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: 投擲ウォッチャー ${{ steps.ver.outputs.tag }}
           prerelease: false
           make_latest: true
           files: throw-watcher.apk
           body: |
-            投擲ウォッチャー 正式版 ${{ github.ref_name }}
+            投擲ウォッチャー 正式版 ${{ steps.ver.outputs.tag }}
             ダウンロード（常に最新の正式版）: https://github.com/RyutanCAMP/darts-throw-watcher/releases/latest/download/throw-watcher.apk
